@@ -74,4 +74,43 @@ if(args["text"] is not None):
     else:
         typewrite(args["text"])
 else:
-    print("Sorry pending implementation")
+    time.sleep(args["time"])
+    if(args["esc"]):
+        #print("Sorry pending implementation")
+        f=open(args["file"],"r")
+        data=f.readline()
+        while(data):
+            args["text"]=data
+            while(args["text"]):
+                try:
+                    slash=args["text"].index("\\")
+                    s=args["text"][:slash]
+                    args["text"]=args["text"][slash:]
+                except:
+                    s=args["text"]
+                    args["text"]=""
+                typewrite(s)
+                if(len(args["text"])>0):
+                    if(args["text"][0]=="\\"):
+                        esc=args["text"][0:2]
+                        if(esc[1]=="n"):
+                            press("enter")
+                        elif(esc[1]=="t"):
+                            press("tab")
+                        elif(esc[1]=="\\"):
+                            typewrite("\\")
+                        else:
+                            print("Unknown escape "+esc)
+                        args["text"]=args["text"][2:]
+            #press("enter")
+            data=f.readline()
+        
+    else:
+        f=open(args["file"],"r")
+        data=f.readline()
+        while(data):
+            typewrite(data)
+            #press("enter")
+            data=f.readline()
+        
+        
