@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+import sys
+import time
+from pyautogui import typewrite,press
+DEBUG=True
+args={"file":None,"text":None,"time":5,"esc":False}
+cont=False
+noerr=False
+
+# Here is the engineering department ;-) (Probably this needs to be in some function)
+for i in range(1,len(sys.argv)):
+    try:
+        if(cont):
+            cont=False
+            continue
+        if(sys.argv[i]=="--file" or sys.argv[i]=="-f"):
+            args["file"]=sys.argv[i+1]
+            cont=True
+        elif(sys.argv[i]=="--text" or sys.argv[i]=="-s"):
+            args["text"]=sys.argv[i+1]
+            cont=True
+        elif(sys.argv[i]=="--time" or sys.argv[i]=="-t"):
+            args["time"]=float(sys.argv[i+1])
+            cont=True
+        elif(sys.argv[i]=="--escapes" or sys.argv[i]=="-e"):
+            args["esc"]=True
+        elif(sys.argv[i]=="--help" or sys.argv[i]=="-h"):
+            print("Example Usage")
+            print(sys.argv[0]+" --file fileToSend -time 5 # Send in 5 seconds file fileToSend.")
+            print(sys.argv[0]+" --text someTextHere -time 5 # Send in 5 seconds someTextHere.")
+            print()
+            print("Argument Description")
+            print("--file/-f  Specifies the file to send.")
+            print("--text/-s  Specifies some string or text to send.")
+            print("--time/-t  Specifies the time delay to send input.")
+            print("--escapes/-e  Enables escape parsing")
+            noerr=True
+            exit(0)
+        else:
+            print("I honeslty did not understand what this "+sys.argv[i]+" is supposed to mean")
+            print("Try -h or --help")
+            exit(-1)
+    except:
+        if(not noerr):
+            print("Catstrophic failure on resolving arguments!")
+            exit(-1)
+        else:
+            exit(0)
+if(DEBUG):
+    print(args)
+
+# Here begins the dragons of the operation
+if(args["text"] is not None):
+    time.sleep(args["time"])
+    if(args["esc"]):
+        while(args["text"]):
+            try:
+                slash=args["text"].index("\\")
+                s=args["text"][:slash]
+                args["text"]=args["text"][slash:]
+            except:
+                s=args["text"]
+                args["text"]=""
+            typewrite(s)
+            if(args["text"][0]=="\\"):
+                esc=args["text"][0:2]
+                if(esc[1]=="n"):
+                    press("enter")
+                elif(esc[1]=="t"):
+                    press("tab")
+                else:
+                    print("Unknown escape "+esc)
+                args["text"]=args["text"][2:]
+    else:
+        typewrite(args["text"])
+else:
+    print("Sorry pending implementation")
