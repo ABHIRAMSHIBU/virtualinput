@@ -1,53 +1,59 @@
 #!/usr/bin/env python
 import sys
 import time
+import os
 from pyautogui import typewrite,press
-DEBUG=True
-args={"file":None,"text":None,"time":5,"esc":False}
-cont=False
-noerr=False
+import argparse
 
-# Here is the engineering department ;-) (Probably this needs to be in some function)
-for i in range(1,len(sys.argv)):
-    try:
-        if(cont):
-            cont=False
-            continue
-        if(sys.argv[i]=="--file" or sys.argv[i]=="-f"):
-            args["file"]=sys.argv[i+1]
-            cont=True
-        elif(sys.argv[i]=="--text" or sys.argv[i]=="-s"):
-            args["text"]=sys.argv[i+1]
-            cont=True
-        elif(sys.argv[i]=="--time" or sys.argv[i]=="-t"):
-            args["time"]=float(sys.argv[i+1])
-            cont=True
-        elif(sys.argv[i]=="--escapes" or sys.argv[i]=="-e"):
-            args["esc"]=True
-        elif(sys.argv[i]=="--help" or sys.argv[i]=="-h"):
-            print("Example Usage")
-            print(sys.argv[0]+" --file fileToSend -time 5 # Send in 5 seconds file fileToSend.")
-            print(sys.argv[0]+" --text someTextHere -time 5 # Send in 5 seconds someTextHere.")
-            print()
-            print("Argument Description")
-            print("--file/-f  Specifies the file to send.")
-            print("--text/-s  Specifies some string or text to send.")
-            print("--time/-t  Specifies the time delay to send input.")
-            print("--escapes/-e  Enables escape parsing")
-            noerr=True
-            exit(0)
+
+DEBUG=False
+
+class CommandLineParser:
+    def __init__(self) -> None:
+        self.parser = parser = argparse.ArgumentParser(
+            description="Program to send keyboard input virtually.",
+            epilog=f'''Example Usage 
+            {sys.argv[0]} --file fileToSend -time 5 # Send in 5 seconds file fileToSend.
+            {sys.argv[0]} --text someTextHere -time 5 # Send in 5 seconds someTextHere.
+            ''',
+            formatter_class=argparse.RawTextHelpFormatter)
+        optional_group = self.parser.add_argument_group(description="Either of the following Arguments is required")
+        group = optional_group.add_mutually_exclusive_group(required=True)
+        group.add_argument("-f","--file",type=self.validate_file,help="File with text to take input from")
+        group.add_argument("-s","--text",help="Specifies some string or text to send")
+        self.parser.add_argument("-t","--time",help="Specifies the time delay to send input.",default=5,type=float)
+        self.parser.add_argument("-e","--escapes",help="Enables escape parsing",dest="esc",action="store_true")
+
+    def validate_file(self,file):
+        if os.path.exists(file):
+            return file
         else:
-            print("I honeslty did not understand what this "+sys.argv[i]+" is supposed to mean")
-            print("Try -h or --help")
-            exit(-1)
-    except:
-        if(not noerr):
-            print("Catstrophic failure on resolving arguments!")
+            raise argparse.ArgumentTypeError(f"The given file {file} does not exist")
+
+
+    def parse(self):
+        known_args,unknown_args = None,None
+        if(len(sys.argv)==1):
+            self.parser.print_help()
             exit(-1)
         else:
-            exit(0)
-if(DEBUG):
-    print(args)
+            try:
+                known_args,unknown_args = self.parser.parse_known_args()
+                if(unknown_args):
+                    print("Unknown arguments","\t".join(unknown_args),"\n")
+                    self.parser.print_help()
+                    exit(-1)
+                args = vars(known_args)
+            except:
+                exit(-1)
+        if(DEBUG):
+            print(known_args,unknown_args)
+        return args
+
+
+command_parser = CommandLineParser()
+args = command_parser.parse()
+
 
 # Here begins the dragons of the operation
 if(args["text"] is not None):
